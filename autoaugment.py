@@ -1,6 +1,8 @@
 from PIL import Image, ImageEnhance, ImageOps
+import xml.etree.ElementTree as ET
 import numpy as np
 import random
+import math
 
 
 class ImageNetPolicy(object):
@@ -48,10 +50,10 @@ class ImageNetPolicy(object):
             SubPolicy(0.6, "color", 4, 1.0, "contrast", 8, fillcolor)
         ]
 
-
-    def __call__(self, img):
-        policy_idx = random.randint(0, len(self.policies) - 1)
-        return self.policies[policy_idx](img)
+    def __call__(self, img, tree, trans_num):
+        # policy_idx = random.randint(0, len(self.policies) - 1)
+        trans_img, no_trans, trans_tree = self.policies[trans_num](img, tree)
+        return trans_img, trans_tree, no_trans
 
     def __repr__(self):
         return "AutoAugment ImageNet Policy"
@@ -189,7 +191,60 @@ class SubPolicy(object):
         # from https://stackoverflow.com/questions/5252170/specify-image-filling-color-when-rotating-in-python-with-pil-and-setting-expand
         def rotate_with_fill(img, magnitude):
             rot = img.convert("RGBA").rotate(magnitude)
+            # print(magnitude)
+            trans_xml(self.trans_tree, magnitude)
             return Image.composite(rot, Image.new("RGBA", rot.size, (128,) * 4), rot).convert(img.mode)
+
+        def trans_xml(tree, magnitude):
+            magnitude = (magnitude/180)*math.pi
+            classes = ['person']
+            root = tree.getroot()
+            size = root.find('size')
+            w = int(size.find('width').text)
+            h = int(size.find('height').text)
+
+            for obj in root.iter('object'):
+                difficult = obj.find('difficult').text
+                cls = obj.find('name').text
+                if cls not in classes or int(difficult) == 1:
+                    continue
+                xmlbox = obj.find('bndbox')
+                lt_x = float(xmlbox.find('xmin').text)
+                rb_x = float(xmlbox.find('xmax').text)
+                lt_y = float(xmlbox.find('ymin').text)
+                rb_y = float(xmlbox.find('ymax').text)
+                # print(lt_x, lt_y, rb_x, rb_y)
+                # print(magnitude, math.cos(magnitude), math.sin(magnitude))
+                c_x = w/2
+                c_y = h/2
+                # print(w, h, c_x, c_y)
+                new_lt_x = (lt_x - c_x) * math.cos(magnitude) - (c_y - lt_y) * math.sin(magnitude) + c_x
+                new_lt_y = c_y - ((rb_x - c_x) * math.sin(magnitude) + (c_y - lt_y) * math.cos(magnitude))
+                new_rb_x = (rb_x - c_x) * math.cos(magnitude) - (c_y - rb_y) * math.sin(magnitude) + c_x
+                new_rb_y = c_y - ((lt_x - c_x) * math.sin(magnitude) + (c_y - rb_y) * math.cos(magnitude))
+                # print(new_lt_x, new_lt_y, new_rb_x, new_rb_y)
+                if new_lt_x < 0:
+                    new_lt_x = 0
+                if new_lt_x > w:
+                    new_lt_x = w
+                if new_lt_y < 0:
+                    new_lt_y = 0
+                if new_lt_y > h:
+                    new_lt_y = h
+                if new_rb_x < 0:
+                    new_rb_x = 0
+                if new_rb_x > w:
+                    new_rb_x = w
+                if new_rb_y < 0:
+                    new_rb_y = 0
+                if new_rb_y > h:
+                    new_rb_y = h
+                # print(new_lt_x, new_lt_y, new_rb_x, new_rb_y)
+                xmlbox.find('xmin').text = str(int(new_lt_x))
+                xmlbox.find('xmax').text = str(int(new_rb_x))
+                xmlbox.find('ymin').text = str(int(new_lt_y))
+                xmlbox.find('ymax').text = str(int(new_rb_y))
+            self.trans_tree = tree
 
         func = {
             "shearX": lambda img, magnitude: img.transform(
@@ -230,8 +285,13 @@ class SubPolicy(object):
         self.operation2 = func[operation2]
         self.magnitude2 = ranges[operation2][magnitude_idx2]
 
-
-    def __call__(self, img):
-        if random.random() < self.p1: img = self.operation1(img, self.magnitude1)
-        if random.random() < self.p2: img = self.operation2(img, self.magnitude2)
-        return img
+    def __call__(self, img, tree):
+        no_trans = 1
+        self.trans_tree = tree
+        if random.random() < self.p1:
+            img = self.operation1(img, self.magnitude1)
+            no_trans = 0
+        if random.random() < self.p2:
+            img = self.operation2(img, self.magnitude2)
+            no_trans = 0
+        return img, no_trans, self.trans_tree
