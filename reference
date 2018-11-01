@@ -1,0 +1,219 @@
+一、ImageOps模块的函数
+
+1、  Autocontrast
+
+定义：ImageOps.autocontrast(image, cutoff=0)⇒ image
+
+含义：最大图像对比度。这个函数计算一个输入图像的直方图，从这个直方图中去除最亮和最暗的百分之cutoff，然后重新映射图像，以便保留的最暗像素变为黑色，即0，最亮的变为白色，即255。
+
+例子：
+
+>>> from PIL import Image, ImageOps
+>>> im02 = Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+>>> im = ImageOps.autocontrast(im02, 20)
+在图像im02中，去掉了原来直方图中最暗和最亮的各20%，剩下的像素值然后再映射到[0，255]的颜色空间上。
+
+2、  Equalize
+
+定义：ImageOps.equalize(image)⇒ image
+
+含义：均衡图像的直方图。该函数使用一个非线性映射到输入图像，为了产生灰色值均匀分布的输出图像。
+
+例子：
+
+>>> from PIL importImage, ImageOps
+
+>>> im02 =Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>> im =ImageOps.equalize(im02)
+
+3、             Invert
+
+定义：ImageOps.invert(image)⇒ image
+
+含义：将输入图像转换为反色图像。
+
+例子：
+
+>>>from PIL import Image, ImageOps
+
+>>>im02 = Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>> im= ImageOps.invert(im02)
+
+4、             Posterize
+
+定义：ImageOps.posterize(image,bits)⇒ image
+
+含义：将每个颜色通道上变量bits对应的低(8-bits)个bit置0。变量bits的取值范围为[0，8]。
+
+例子：
+
+>>>from PIL import Image, ImageOps
+
+>>>im02 = Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>>im02.getpixel((0,0))
+
+(124, 127, 108)
+
+>>> im2= ImageOps.posterize(im02, 2)
+
+>>>im2.getpixel((0,0))
+
+(64, 64, 64)
+
+>>> im3= ImageOps.posterize(im02, 3)
+
+>>>im3.getpixel((0,0))
+
+(96, 96, 96)
+
+>>> im5= ImageOps.posterize(im02, 5)
+
+>>>im5.getpixel((0,0))
+
+(120, 120, 104)
+当变量bits为2时，将每个颜色通道的像素值低6bit清0，保留剩下的2 bit位。即124=二进制1111100，其处置之后为，二进制1000000=32
+
+5、             Solarize
+
+定义：ImageOps.solarize(image,threshold=128)⇒ image
+
+含义：在指定的阈值范围内，反转所有的像素点。
+
+例子：
+
+>>>from PIL import Image, ImageOps
+
+>>>im02 = Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>>im02.getpixel((0,0))
+
+(124, 127, 108)
+
+>>> im0= ImageOps.solarize(im02, 100)
+
+>>> im1= ImageOps.solarize(im02, 200)
+
+>>> im0.getpixel((0,0))
+
+(131, 128, 147)
+
+>>> im1.getpixel((0,0))
+
+(124, 127, 108)
+图像im0的第一个像素点红色通道值为131=二进制10000011，图像im02的第一个像素点红色通道值为124=二进制1111100。
+Im0的值为im02的值所有位取反。图像im0中阈值为100，即大于100的值都需要做反转。图像im1的阈值为200，所以第一个像素点的值都没有变化。
+
+二、ImageEnhance模块的Color类
+
+颜色增强类用于调整图像的颜色均衡，在某种程度上类似控制彩色电视机。该类实现的增强接口如下：
+
+ImageEnhance.Color(image) ⇒ Color enhancer instance
+
+创建一个增强对象，以调整图像的颜色。增强因子为0.0将产生黑白图像；为1.0将给出原始图像。
+
+ImageEnhance.Color类的实例：
+
+>>> from PIL import Image, ImageEnhance
+
+>>> im02 =Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>> im_1 = ImageEnhance.Color(im02).enhance(0.1)
+
+>>> im_5 = ImageEnhance.Color(im02).enhance(0.5)
+
+>>> im_8 =ImageEnhance.Color(im02).enhance(0.8)
+
+>>> im_20 = ImageEnhance.Color(im02).enhance(2.0)
+
+从前面的介绍，我们可以得知函数enhance()的参数factor决定着图像的颜色饱和度情况。从0.1到0.5，再到0.8，2.0，图像的颜色饱和度依次增大。
+
+三、ImageEnhance模块的Brightness类
+
+亮度增强类用于调整图像的亮度。
+
+ImageEnhance.Brightness(image)⇒ Brightnessenhancer instance
+
+创建一个调整图像亮度的增强对象。增强因子为0.0将产生黑色图像；为1.0将保持原始图像。
+
+ImageEnhance.Brightness类的实例：
+
+>>> from PIL import Image, ImageEnhance
+
+>>> im02 =Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>> im_2 = ImageEnhance.Brightness(im02).enhance(0.2)
+
+>>> im_5 = ImageEnhance.Brightness(im02).enhance(0.5)
+
+>>> im_8 =ImageEnhance.Brightness (im02).enhance(0.8)
+
+>>> im_20 =ImageEnhance.Brightness (im02).enhance(2.0)
+
+该函数enhance()的参数factor决定着图像的亮度情况。从0.1到0.5，再到0.8，2.0，图像的亮度依次增大。
+
+四、ImageEnhance模块的Contrast类
+
+对比度增强类用于调整图像的对比度。类似于调整彩色电视机的对比度。
+
+ImageEnhance.Contrast(image) ⇒ Contrast enhancer instance
+
+创建一个调整图像对比度的增强对象。增强因子为0.0将产生纯灰色图像；为1.0将保持原始图像。
+
+ImageEnhance.Contrast类的实例：
+
+>>> from PIL import Image, ImageEnhance
+
+>>> im02 =Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>> im_1 = ImageEnhance.Contrast(im02).enhance(0.1)
+
+>>> im_5 = ImageEnhance.Contrast(im02).enhance(0.5)
+
+>>> im_8 =ImageEnhance.Contrast (im02).enhance(0.8)
+
+>>> im_20 =ImageEnhance.Contrast (im02).enhance(2.0)
+
+该函数enhance()的参数factor决定着图像的对比度情况。从0.1到0.5，再到0.8，2.0，图像的对比度依次增大。
+
+五、ImageEnhance模块的Sharpness类
+
+锐度增强类用于调整图像的锐度。
+
+ImageEnhance.Sharpness(image) ⇒ Sharpness enhancer instance
+
+创建一个调整图像锐度的增强对象。增强因子为0.0将产生模糊图像；为1.0将保持原始图像，为2.0将产生锐化过的图像。
+
+ImageEnhance.Sharpness类的实例：
+
+>>> from PIL import Image, ImageEnhance
+
+>>> im02 =Image.open("D:\\Code\\Python\\test\\img\\test02.jpg")
+
+>>> im_0 = ImageEnhance.Sharpness(im02).enhance(0.0)
+
+>>> im_20 =ImageEnhance.Sharpness (im02).enhance(2.0)
+
+>>> im_30 =ImageEnhance.Sharpness (im02).enhance(3.0)
+
+该函数enhance()的参数factor决定着图像的锐度情况。从0.0到2.0，再到3.0，图像的锐度依次增大。
+
+六、Image.transform(size, method, data=None, resample=0, fill=1)
+改变一张图片，这个方法会根据给定的尺寸生成一张与原图同样mode的图片，并根据给定的变化，从原图生的一个副本。说白了呢就是生成一张变换后的新图片。
+size：尺寸，接受一个二值元组，格式：(width, height)。这个参数可以用来做缩放处理，比如原图(300, 300)大小，你可以指定新图片大小为(50, 50)
+
+data：这个参数是必须的，否则会报：ValueError异常。这个参数用于指定methond指定的变换方式说需要的额外的数据，这个会在下面说method参数时顺带说了。
+
+method：变换的方式，该值是给定，你只能从以下几个值当中选一个：
+在当前的PIL版本中，参数method为EXTENT（裁剪出一个矩形区域），AFFINE（仿射变换），QUAD（将正方形转换为矩形），MESH（一个操作映射多个正方形）或者PERSPECTIVE。
+
+Image.EXTENT（cut out a rectangular subregion[ 切出一个矩形区域 ]）：
+
+该参数的data接受一个四值list，格式如：( x1, y1, x2, y2)，表示矩阵的起始点(x1, y1)，(x2, y2)。
+这个点坐标不要求一定要在图形大小表示的范围内，超过也可以，不过超过的部分默认使用黑色填充。
+
+对当前的图像进行仿射变换，变换结果体现在给定尺寸的新图像中。
+      变量data是一个6元组(a,b,c,d,e,f)，包含一个仿射变换矩阵的第一个两行。
+      输出图像中的每一个像素（x，y），新值由输入图像的位置（ax+by+c, dx+ey+f）的像素产生，使用最接近的像素进行近似。
