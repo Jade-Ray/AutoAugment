@@ -6,10 +6,10 @@ import PIL
 import os
 import shutil
 
-img_path = "./test/img"
-xml_path = "./test/xml"
-trans_img_path = "./test/transimg"
-trans_xml_path = "./test/transxml"
+img_path = "F:/YOLOv3/gongjiao-up"
+xml_path = "F:/YOLOv3/gongjiaoxml-up"
+trans_img_path = "F:/YOLOv3/transimg"
+trans_xml_path = "F:/YOLOv3/transxml"
 
 temp = 1
 trans_num = 0
